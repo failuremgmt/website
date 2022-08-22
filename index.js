@@ -36,7 +36,9 @@ for (const file of apiEndpointFiles) {
 
 // API Documentaton Map
 const apiDocs = new Map();
-const apiDocFiles = fs.readdirSync("./docs").filter((file) => file.endsWith(".md"));
+const apiDocFiles = fs
+	.readdirSync("./docs")
+	.filter((file) => file.endsWith(".md"));
 
 for (const file of apiDocFiles) {
 	// I don't even know how the fuck i am going to get this to work.
