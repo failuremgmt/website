@@ -2,6 +2,7 @@
 const express = require("express"),
 	app = express();
 const fs = require("node:fs");
+const logger = require("./logger");
 require("dotenv").config();
 
 // Middleware
@@ -20,7 +21,7 @@ const endpointFiles = fs
 
 for (const file of endpointFiles) {
 	const endpoint = require(`./endpoints/${file}`);
-	endpoints.set(endpoint.name, endpoint);
+	endpoints.set(endpoint.data.name, endpoint);
 }
 
 // API Endpoint Map
@@ -45,15 +46,87 @@ for (const file of apiDocFiles) {
 }
 
 // Endpoints
-app.get("/", (req, res) => {
-	res.send("Coming Soon!");
+app.get("/", async (req, res) => {
+	const endpoint = endpoints.get("root");
+
+	if (!endpoint)
+		res.status(404).json({
+			error: "This endpoint does not exist.",
+		});
+
+	try {
+		endpoint.execute({
+			request: req,
+			response: res,
+		});
+	} catch (error) {
+		res.status(500).json({
+			error: error,
+		});
+
+		logger.error(`Endpoint (${endpoint.data.name})`, error);
+	}
+});
+
+app.get("/:query", (req, res) => {
+	const endpoint = endpoints.get(req.params["query"]);
+
+	if (!endpoint)
+		res.status(404).json({
+			error: "This endpoint does not exist.",
+		});
+
+	try {
+		endpoint.execute({
+			request: req,
+			response: res,
+		});
+	} catch (error) {
+		res.status(500).json({
+			error: error,
+		});
+
+		logger.error(`Endpoint (${endpoint.data.name})`, error);
+	}
 });
 
 // API Endpoints
 app.all("/api", (req, res) => {
-	res.json({
+	res.status(404).json({
 		error: "This endpoint does not exist!",
 	});
+});
+
+app.all("/api/:query", (req, res) => {
+	const endpoint = apiEndpoints.get(req.params["query"]);
+
+	if (!endpoint)
+		res.status(404).json({
+			error: "This endpoint does not exist.",
+		});
+
+	try {
+		if (endpoint.data.type != req.method)
+			res.status(405).json({
+				error: `This endpoint does not allow the "${req.method.toUpperCase()}" method.`,
+			});
+
+		endpoint.execute({
+			request: req,
+			response: res,
+		});
+	} catch (error) {
+		res.status(500).json({
+			error: error,
+		});
+
+		logger.error(`Endpoint (${endpoint.data.name})`, error);
+	}
+});
+
+// Page not Found
+app.all("*", (res, req) => {
+	req.status(404).send("404 - Page not Found!");
 });
 
 // Start Server
