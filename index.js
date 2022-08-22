@@ -1,10 +1,8 @@
 // Packages
 const express = require("express"),
 	app = express();
+const fs = require("node:fs");
 require("dotenv").config();
-
-// PORT
-const PORT = 7478;
 
 // Middleware
 app.use(express.json());
@@ -13,6 +11,36 @@ app.use(
 		root: __dirname,
 	})
 );
+
+// Endpoint Map
+const endpoints = new Map();
+const endpointFiles = fs
+	.readdirSync("./endpoints")
+	.filter((file) => file.endsWith(".js"));
+
+for (const file of endpointFiles) {
+	const endpoint = require(`./endpoints/${file}`);
+	endpoints.set(endpoint.name, endpoint);
+}
+
+// API Endpoint Map
+const apiEndpoints = new Map();
+const apiEndpointFiles = fs
+	.readdirSync("./api")
+	.filter((file) => file.endsWith(".js"));
+
+for (const file of apiEndpointFiles) {
+	const endpoint = require(`./api/${file}`);
+	apiEndpoints.set(endpoint.data.name, endpoint);
+}
+
+// API Documentaton Map
+const apiDocs = new Map();
+const apiDocFiles = fs.readdirSync("./docs").filter((file) => file.endsWith(".md"));
+
+for (const file of apiDocFiles) {
+	// I don't even know how the fuck i am going to get this to work.
+}
 
 // Endpoints
 app.get("/", (req, res) => {
@@ -27,6 +55,6 @@ app.all("/api", (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-	console.log(`Server started on port: ${PORT}`);
+app.listen(process.env.PORT, () => {
+	console.log(`Server started on port: ${process.env.PORT}`);
 });
