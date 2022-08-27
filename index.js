@@ -5,6 +5,33 @@ const fs = require("node:fs");
 const logger = require("./logger");
 require("dotenv").config();
 
+// Packages for Markdown
+const { JSDOM } = require("jsdom");
+const marked = require("marked");
+const metadataParser = require("@cmdlucas/markdown-metadata");
+const dompurify = require("dompurify"), purify = dompurify(new JSDOM("").window);
+
+// Configure marked
+marked.setOptions({
+	renderer: new marked.Renderer(),
+	highlight: function (code, lang) {
+		const hljs = require("highlight.js");
+		const language = hljs.getLanguage(lang) ? lang : "plaintext";
+
+		return hljs.highlight(code, {
+			language
+		}).value;
+	},
+	langPrefix: "hljs language-",
+	pedantic: false,
+	gfm: true,
+	breaks: false,
+	sanitize: false,
+	smartLists: true,
+	smartypants: false,
+	xhtml: false
+});
+
 // Middleware
 app.use(express.json());
 app.use(
@@ -42,7 +69,15 @@ const apiDocFiles = fs
 	.filter((file) => file.endsWith(".md"));
 
 for (const file of apiDocFiles) {
-	// I don't even know how the fuck i am going to get this to work.
+	const contents = fs.readFileSync(`${__dirname}/docs/${file}`, "utf8");
+	const result = metadataParser.parse(contents);
+
+	const results = {
+		metadata: result.metadata,
+		content: purify.sanitize(marked.parse(result.content))
+	};
+
+	apiDocs.set(file.split(".")[0], results);
 }
 
 // Endpoints
@@ -50,7 +85,7 @@ app.get("/", async (req, res) => {
 	const endpoint = endpoints.get("root");
 
 	if (!endpoint)
-		res.status(404).json({
+		return res.status(404).json({
 			error: "This endpoint does not exist.",
 		});
 
@@ -60,19 +95,19 @@ app.get("/", async (req, res) => {
 			response: res,
 		});
 	} catch (error) {
-		res.status(500).json({
+		logger.error(`Endpoint (${endpoint.data.name})`, error);
+
+		return res.status(500).json({
 			error: error,
 		});
-
-		logger.error(`Endpoint (${endpoint.data.name})`, error);
 	}
 });
 
-app.get("/:query", (req, res) => {
-	const endpoint = endpoints.get(req.params["query"]);
+app.get("/:page", (req, res) => {
+	const endpoint = endpoints.get(req.params["page"]);
 
 	if (!endpoint)
-		res.status(404).json({
+		return res.status(404).json({
 			error: "This endpoint does not exist.",
 		});
 
@@ -82,32 +117,32 @@ app.get("/:query", (req, res) => {
 			response: res,
 		});
 	} catch (error) {
-		res.status(500).json({
+		logger.error(`Endpoint (${endpoint.data.name})`, error);
+
+		return res.status(500).json({
 			error: error,
 		});
-
-		logger.error(`Endpoint (${endpoint.data.name})`, error);
 	}
 });
 
 // API Endpoints
 app.all("/api", (req, res) => {
-	res.status(404).json({
+	return res.status(404).json({
 		error: "This endpoint does not exist!",
 	});
 });
 
-app.all("/api/:query", (req, res) => {
-	const endpoint = apiEndpoints.get(req.params["query"]);
+app.all("/api/:endpoint", (req, res) => {
+	const endpoint = apiEndpoints.get(req.params["endpoint"]);
 
 	if (!endpoint)
-		res.status(404).json({
+		return res.status(404).json({
 			error: "This endpoint does not exist.",
 		});
 
 	try {
 		if (endpoint.data.type != req.method)
-			res.status(405).json({
+			return res.status(405).json({
 				error: `This endpoint does not allow the "${req.method.toUpperCase()}" method.`,
 			});
 
@@ -116,20 +151,20 @@ app.all("/api/:query", (req, res) => {
 			response: res,
 		});
 	} catch (error) {
-		res.status(500).json({
+		logger.error(`Endpoint (${endpoint.data.name})`, error);
+
+		return res.status(500).json({
 			error: error,
 		});
-
-		logger.error(`Endpoint (${endpoint.data.name})`, error);
 	}
 });
 
 // Page not Found
 app.all("*", (res, req) => {
-	req.status(404).send("404 - Page not Found!");
+	return req.status(404).send("404 - Page not Found!");
 });
 
 // Start Server
 app.listen(process.env.PORT, () => {
-	console.log(`Server started on port: ${process.env.PORT}`);
+	logger.info("Express", `Server started on port ${process.env.PORT.green}`);
 });

@@ -3,6 +3,6 @@ module.exports = {
 		name: "root",
 	},
 	execute: async (context) => {
-		context.response.send("Coming Soon!");
+		return context.response.send("Coming Soon!");
 	},
 };

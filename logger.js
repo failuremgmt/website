@@ -1,5 +1,5 @@
 // Packages
-const colors = require("colors");
+require("colors");
 
 // Info
 const info = (name, message) =>
