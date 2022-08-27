@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+    <head>
+		<!-- Metadata -->
+        <title>Failure Management API Documentation</title>
+		<meta charset="utf-8">
+		<meta name="og:site_name" content="Failure Management API">
+		<meta name="og:title" content="Failure Management API Documentation">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="og:description" content="Want to access Failure Management's services programatically? This is the best place for just that!">
+		<meta name="theme-color" content="#1387f8">
+		<meta name="robots" content="noindex, nofollow">
+
+		<!-- Styling -->
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link rel="stylesheet" href="/styling/variables.css">
+		<link rel="stylesheet" href="/styling/dark.css">
+        <link rel="stylesheet" href="/styling/docs.css">
+	</head>
+	
+    <body>
+        <% data.forEach((doc) => { %>
+            <div class="doc" onclick="window.location.href = '/docs/<%= doc.metadata.title.toLowerCase() %>';">
+                <div class="metadata">
+                    <h1><%= doc.metadata.title %></h1>
+                    <p><%= doc.metadata.description %></p>
+        
+                    <ul class="keywords">
+                        <% doc.metadata.keywords.split(",").forEach((keyword) => { %>
+                            <li class="keyword"><%= keyword %></li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="seperate"></div>
+        <% }); %>
+	</body>
+</html>

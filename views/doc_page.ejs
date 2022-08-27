@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+    <head>
+		<!-- Metadata -->
+        <title><%= metadata.title %> - Failure Management API</title>
+		<meta charset="utf-8">
+		<meta name="og:site_name" content="Failure Management API">
+		<meta name="og:title" content="<%= metadata.title %>">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="og:description" content="<%= metadata.description %>">
+		<meta name="theme-color" content="#1387f8">
+		<meta name="keywords" content="<%= metadata.keywords %>">
+		<meta name="robots" content="noindex, nofollow">
+
+		<!-- Styling -->
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link rel="stylesheet" href="/styling/variables.css">
+		<link rel="stylesheet" href="/styling/dark.css">
+        <link rel="stylesheet" href="/styling/docs.css">
+	</head>
+	
+    <body>
+		<div class="metadata">
+			<h1><%= metadata.title %></h1>
+		    <p><%= metadata.description %></p>
+
+			<ul class="keywords">
+				<% metadata.keywords.split(",").forEach((keyword) => { %>
+					<li class="keyword"><%= keyword %></li>
+				<% }); %>
+			</ul>
+		</div>
+
+		<hr />
+
+		<div class="content"><%- content %></div>
+	</body>
+</html>

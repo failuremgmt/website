@@ -1,0 +1,93 @@
+/* Basic Stuff (body, seperate, hr) */
+body {
+	background-color: var(--bg-color);
+	color: var(--color);
+	margin: 0;
+	padding: 5px 10px 15px 15px;
+}
+
+.seperate {
+	padding: 10px;
+}
+
+hr {
+	margin-top: 25px;
+}
+
+/* Metadata */
+.metadata h1 {
+	font-family: "Raleway", sans-serif;
+	margin-block: auto;
+	margin-top: 10px;
+}
+
+.metadata h2 {
+	font-size: 0.8em !important;
+	font-family: "Montserrat", sans-serif !important;
+}
+
+.metadata span {
+	text-decoration: underline !important;
+}
+
+.metadata p {
+	font-family: "Montserrat", sans-serif;
+}
+
+.metadata ul {
+	display: inline;
+	list-style: none;
+	padding: 0;
+}
+
+.metadata li {
+	display: inline;
+	margin-right: 5px;
+	padding: 5px;
+	border: 2px solid var(--color);
+	border-radius: 5px;
+	font-family: "Montserrat", sans-serif !important;
+	font-weight: bold;
+}
+
+/* Content */
+.content h1,
+.content h2,
+.content h3,
+.content h4,
+.content h5,
+.content h6 {
+	font-family: "Raleway", sans-serif;
+}
+
+.content ul,
+.content ol {
+	list-style: none;
+	padding: 0;
+}
+
+.content li {
+	margin-bottom: 20px;
+}
+
+.content .req-type {
+	font-family: "Montserrat", sans-serif;
+	font-weight: bold;
+	background: lightgreen;
+	color: var(--alt-color);
+	padding: 5px;
+	border-radius: 5px;
+}
+
+.content .endpoint {
+	font-family: "Raleway", sans-serif;
+	margin-left: 5px;
+}
+
+/* Main Documentation Stuff */
+.doc {
+	border: 2px solid var(--alt-bg-color);
+	border-radius: 6px;
+	padding: 10px;
+	cursor: pointer;
+}

@@ -9,7 +9,8 @@ require("dotenv").config();
 const { JSDOM } = require("jsdom");
 const marked = require("marked");
 const metadataParser = require("@cmdlucas/markdown-metadata");
-const dompurify = require("dompurify"), purify = dompurify(new JSDOM("").window);
+const dompurify = require("dompurify"),
+	purify = dompurify(new JSDOM("").window);
 
 // Configure marked
 marked.setOptions({
@@ -19,7 +20,7 @@ marked.setOptions({
 		const language = hljs.getLanguage(lang) ? lang : "plaintext";
 
 		return hljs.highlight(code, {
-			language
+			language,
 		}).value;
 	},
 	langPrefix: "hljs language-",
@@ -29,11 +30,12 @@ marked.setOptions({
 	sanitize: false,
 	smartLists: true,
 	smartypants: false,
-	xhtml: false
+	xhtml: false,
 });
 
 // Middleware
 app.use(express.json());
+app.set("view engine", "ejs");
 app.use(
 	express.static("static", {
 		root: __dirname,
@@ -59,7 +61,10 @@ const apiEndpointFiles = fs
 
 for (const file of apiEndpointFiles) {
 	const endpoint = require(`./api/${file}`);
-	apiEndpoints.set(endpoint.data.name, endpoint);
+	apiEndpoints.set(
+		`${endpoint.data.category}/${endpoint.data.name}`,
+		endpoint
+	);
 }
 
 // API Documentaton Map
@@ -74,7 +79,7 @@ for (const file of apiDocFiles) {
 
 	const results = {
 		metadata: result.metadata,
-		content: purify.sanitize(marked.parse(result.content))
+		content: purify.sanitize(marked.parse(result.content)),
 	};
 
 	apiDocs.set(file.split(".")[0], results);
@@ -82,20 +87,20 @@ for (const file of apiDocFiles) {
 
 // Endpoints
 app.get("/", async (req, res) => {
-	const endpoint = endpoints.get("root");
+	const page = endpoints.get("root");
 
-	if (!endpoint)
+	if (!page)
 		return res.status(404).json({
 			error: "This endpoint does not exist.",
 		});
 
 	try {
-		endpoint.execute({
+		page.execute({
 			request: req,
 			response: res,
 		});
 	} catch (error) {
-		logger.error(`Endpoint (${endpoint.data.name})`, error);
+		logger.error(`Page (${page.data.name})`, error);
 
 		return res.status(500).json({
 			error: error,
@@ -103,21 +108,21 @@ app.get("/", async (req, res) => {
 	}
 });
 
-app.get("/:page", (req, res) => {
-	const endpoint = endpoints.get(req.params["page"]);
+app.get("/page/:page", (req, res) => {
+	const page = endpoints.get(req.params["page"]);
 
-	if (!endpoint)
+	if (!page)
 		return res.status(404).json({
-			error: "This endpoint does not exist.",
+			error: "This page does not exist.",
 		});
 
 	try {
-		endpoint.execute({
+		page.execute({
 			request: req,
 			response: res,
 		});
 	} catch (error) {
-		logger.error(`Endpoint (${endpoint.data.name})`, error);
+		logger.error(`Page (${page.data.name})`, error);
 
 		return res.status(500).json({
 			error: error,
@@ -132,8 +137,10 @@ app.all("/api", (req, res) => {
 	});
 });
 
-app.all("/api/:endpoint", (req, res) => {
-	const endpoint = apiEndpoints.get(req.params["endpoint"]);
+app.all("/api/:category/:endpoint", (req, res) => {
+	const endpoint = apiEndpoints.get(
+		`${req.params["category"]}/${req.params["endpoint"]}`
+	);
 
 	if (!endpoint)
 		return res.status(404).json({
@@ -141,9 +148,9 @@ app.all("/api/:endpoint", (req, res) => {
 		});
 
 	try {
-		if (endpoint.data.type != req.method)
+		if (endpoint.data.method != req.method)
 			return res.status(405).json({
-				error: `This endpoint does not allow the "${req.method.toUpperCase()}" method.`,
+				error: `Method \`${req.method}\` is not allowed for this endpoint.`,
 			});
 
 		endpoint.execute({
@@ -151,7 +158,10 @@ app.all("/api/:endpoint", (req, res) => {
 			response: res,
 		});
 	} catch (error) {
-		logger.error(`Endpoint (${endpoint.data.name})`, error);
+		logger.error(
+			`API Endpoint (${endpoint.data.category}/${endpoint.data.name})`,
+			error
+		);
 
 		return res.status(500).json({
 			error: error,
@@ -159,9 +169,43 @@ app.all("/api/:endpoint", (req, res) => {
 	}
 });
 
+// API Documentation Endpoints
+app.get("/docs", async (req, res) => {
+	let data = [];
+
+	apiDocs.forEach((content) => {
+		data.push({
+			metadata: content.metadata,
+			content: content.content
+		});
+	});
+
+	res.render("all_docs", {
+		data: data
+	});
+});
+
+app.get("/docs/:title", async (req, res) => {
+	const document = apiDocs.get(req.params["title"] || "null");
+
+	if (!document)
+		return res
+			.status(404)
+			.send(
+				"It seems the documentation page that you are looking for does not exist."
+			);
+	else
+		return res.render("doc_page", {
+			metadata: document.metadata,
+			content: document.content
+		});
+});
+
 // Page not Found
-app.all("*", (res, req) => {
-	return req.status(404).send("404 - Page not Found!");
+app.all("*", (req, res) => {
+	return res.status(404).json({
+		error: "This endpoint does not exist.",
+	});
 });
 
 // Start Server
