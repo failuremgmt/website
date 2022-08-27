@@ -176,12 +176,12 @@ app.get("/docs", async (req, res) => {
 	apiDocs.forEach((content) => {
 		data.push({
 			metadata: content.metadata,
-			content: content.content
+			content: content.content,
 		});
 	});
 
 	res.render("all_docs", {
-		data: data
+		data: data,
 	});
 });
 
@@ -197,7 +197,7 @@ app.get("/docs/:title", async (req, res) => {
 	else
 		return res.render("doc_page", {
 			metadata: document.metadata,
-			content: document.content
+			content: document.content,
 		});
 });
 
